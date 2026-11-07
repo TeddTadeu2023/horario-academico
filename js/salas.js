@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────
 
 function openModalSala(id) {
+  if (!exigirGestao()) return;
   $('salaId').value = '';
   $('salaNome').value = '';
   $('salaTipo').value = 'Sala de Aula';
@@ -26,6 +27,7 @@ function openModalSala(id) {
 }
 
 function salvarSala() {
+  if (!exigirGestao()) return;
   const nome = $('salaNome').value.trim();
   if (!nome) { toast('Informe o nome da sala', 'error'); return; }
   const id = $('salaId').value || uid();
@@ -44,6 +46,7 @@ function salvarSala() {
 }
 
 function excluirSala(id) {
+  if (!exigirGestao()) return;
   if (!confirm('Excluir esta sala? Aulas vinculadas serão removidas.')) return;
   state.salas = state.salas.filter((x) => x.id !== id);
   state.planos.forEach((p) => { p.aulas = p.aulas.filter((x) => x.salaId !== id); });
@@ -74,8 +77,8 @@ function renderSalas() {
           </div>
           <div class="list-item-actions">
             <span class="badge badge-blue">${usada} aulas</span>
-            <button class="btn btn-ghost btn-sm" onclick="openModalSala('${esc(s.id)}')">✏️ Editar</button>
-            <button class="btn btn-danger" onclick="excluirSala('${esc(s.id)}')">🗑</button>
+            <button class="btn btn-ghost btn-sm so-gestao" onclick="openModalSala('${esc(s.id)}')">✏️ Editar</button>
+            <button class="btn btn-danger so-gestao" onclick="excluirSala('${esc(s.id)}')">🗑</button>
           </div>
         </div>`;
     }).join('')}`).join('');

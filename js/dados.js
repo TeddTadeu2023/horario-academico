@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────
-// EXPORTAR / IMPORTAR / LIMPAR
+// EXPORTAR (backup) / IMPORTAR / LIMPAR — somente Gestão
 // ─────────────────────────────────────────
 
 function exportarJSON() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(dadosParaSalvar(), null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -15,28 +15,35 @@ function exportarJSON() {
 
 function importarJSON(e) {
   const f = e.target.files[0];
-  if (!f) return;
+  e.target.value = '';
+  if (!f || !exigirGestao()) return;
   const r = new FileReader();
   r.onload = (ev) => {
     try {
       const data = JSON.parse(ev.target.result);
       if (data.cursos === undefined) { toast('Arquivo inválido', 'error'); return; }
-      state = normalizarEstado(data);
-      save();
+      if (!confirm('Importar este arquivo vai SUBSTITUIR todo o planejamento no banco, para todos os usuários. Continuar?')) return;
+      const turnosAtuais = state.turnos || clonarTurnos(TURNO_HORARIOS);
+      state = normalizarEstado(data, state.planoAtivoId);
+      if (!state.turnos) state.turnos = turnosAtuais;   // backups antigos não têm turnos
+      aplicarTurnosDoEstado();
       renderTudo();
+      gravarAgora();
       toast('Dados importados!');
     } catch {
       toast('Erro ao importar JSON', 'error');
     }
   };
   r.readAsText(f);
-  e.target.value = '';
 }
 
 function limparTudo() {
-  if (!confirm('⚠️ Apagar TODOS os dados? Não é possível desfazer.')) return;
+  if (!exigirGestao()) return;
+  if (!confirm('⚠️ Apagar TODO o planejamento do banco, para todos os usuários? Não é possível desfazer.\n\nDica: use "Exportar JSON" antes, como backup.')) return;
+  const turnos = state.turnos;
   state = estadoVazio();
-  save();
+  state.turnos = turnos;
   renderTudo();
+  gravarAgora();
   toast('Dados apagados.', 'warn');
 }

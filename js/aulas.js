@@ -11,6 +11,7 @@ function preencherSelect(sel, itens, labelFn) {
 }
 
 function openModalAula(dia, horario, aulaId) {
+  if (!exigirGestao()) return;
   // Sem planos: abre o modal de novo plano
   if (!state.planos.length) {
     toast('Crie um Plano de Horário antes de alocar aulas.', 'warn');
@@ -126,7 +127,8 @@ function mostrarConflitosModal(html) {
 }
 
 function salvarAula() {
-  const dia       = $('aulaDia').value;
+  if (!exigirGestao()) return;
+  const dia      = $('aulaDia').value;
   const cursoId   = $('aulaCurso').value;
   const docenteId = $('aulaDocente').value;
   const salaId    = $('aulaSala').value;
@@ -189,6 +191,7 @@ function salvarAula() {
 }
 
 function excluirAula(id) {
+  if (!exigirGestao()) return;
   const pa = planoAtivo();
   if (pa) pa.aulas = pa.aulas.filter((x) => x.id !== id);
   finalizarAlteracaoAulas();

@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────
 
 function openModalNovoPlano(id) {
+  if (!exigirGestao()) return;
   const selCurso = $('planoCursoId');
   selCurso.innerHTML = '<option value="">— selecione um curso cadastrado —</option>'
     + state.cursos.map((c) => {
@@ -63,6 +64,7 @@ function preencherDadosDoCurso() {
 }
 
 function salvarPlano() {
+  if (!exigirGestao()) return;
   const cursoId = $('planoCursoId').value;
   if (!cursoId) { toast('Selecione um curso cadastrado', 'error'); return; }
   const curso = state.cursos.find((x) => x.id === cursoId);
@@ -95,6 +97,7 @@ function salvarPlano() {
 }
 
 function excluirPlano(id) {
+  if (!exigirGestao()) return;
   if (state.planos.length <= 1) { toast('É necessário ter pelo menos um plano.', 'warn'); return; }
   const p = state.planos.find((x) => x.id === id);
   if (!confirm(`Excluir o plano "${p?.labelAba || p?.nome}"? As aulas deste plano serão perdidas.`)) return;
@@ -105,13 +108,15 @@ function excluirPlano(id) {
   toast('Plano excluído.', 'warn');
 }
 
+// A aba selecionada é local (não grava no banco)
 function selecionarPlano(id) {
   state.planoAtivoId = id;
-  save(); renderPlanosTabs(); renderGrade();
+  renderPlanosTabs(); renderGrade();
 }
 
 function renderPlanosTabs() {
   const bar = $('planosTabs');
+  const gestao = podeEditar();
   bar.innerHTML = '';
 
   const btnNovo = document.createElement('button');
@@ -119,9 +124,13 @@ function renderPlanosTabs() {
   btnNovo.onclick = () => openModalNovoPlano();
 
   if (!state.planos.length) {
-    btnNovo.textContent = '＋ Criar Primeiro Plano';
-    bar.appendChild(btnNovo);
-    $('planoSubtitle').textContent = 'Crie um plano vinculado a um curso para começar a alocar aulas';
+    if (gestao) {
+      btnNovo.textContent = '＋ Criar Primeiro Plano';
+      bar.appendChild(btnNovo);
+    }
+    $('planoSubtitle').textContent = gestao
+      ? 'Crie um plano vinculado a um curso para começar a alocar aulas'
+      : 'Nenhum plano de horário publicado ainda';
     return;
   }
 
@@ -137,16 +146,18 @@ function renderPlanosTabs() {
       ${esc(p.labelAba || p.nome)}
       <span class="tab-count" ${ativo ? `style="background:${esc(p.cor)};color:#fff"` : ''}>${qtd} aula${qtd !== 1 ? 's' : ''}</span>
       ${confl ? `<span class="tab-conf">⚠️${confl}</span>` : ''}
-      ${state.planos.length > 1 ? '<span class="tab-del" title="Excluir plano">×</span>' : ''}`;
+      ${gestao && state.planos.length > 1 ? '<span class="tab-del" title="Excluir plano">×</span>' : ''}`;
     tab.onclick = () => selecionarPlano(p.id);
-    tab.ondblclick = (e) => { e.stopPropagation(); openModalNovoPlano(p.id); };
+    if (gestao) tab.ondblclick = (e) => { e.stopPropagation(); openModalNovoPlano(p.id); };
     const del = tab.querySelector('.tab-del');
     if (del) del.onclick = (e) => { e.stopPropagation(); excluirPlano(p.id); };
     bar.appendChild(tab);
   });
 
-  btnNovo.textContent = '＋ Novo Plano';
-  bar.appendChild(btnNovo);
+  if (gestao) {
+    btnNovo.textContent = '＋ Novo Plano';
+    bar.appendChild(btnNovo);
+  }
 
   // Subtítulo com dados do plano ativo
   const pa = planoAtivo();

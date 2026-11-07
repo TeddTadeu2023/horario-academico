@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────
 
 function openModalCurso(id) {
+  if (!exigirGestao()) return;
   $('cursoId').value = '';
   $('cursoNome').value = '';
   $('cursoSemestre').value = '';
@@ -32,6 +33,7 @@ function openModalCurso(id) {
 }
 
 function salvarCurso() {
+  if (!exigirGestao()) return;
   const nome = $('cursoNome').value.trim();
   if (!nome) { toast('Preencha o nome do curso', 'error'); return; }
   const id = $('cursoId').value || uid();
@@ -53,6 +55,7 @@ function salvarCurso() {
 }
 
 function excluirCurso(id) {
+  if (!exigirGestao()) return;
   if (!confirm('Excluir este curso? Aulas vinculadas também serão removidas.')) return;
   state.cursos = state.cursos.filter((x) => x.id !== id);
   state.planos.forEach((p) => { p.aulas = p.aulas.filter((x) => x.cursoId !== id); });
@@ -87,7 +90,7 @@ function renderCursos() {
             </div>
           </div>
         </div>
-        <div class="list-item-actions">
+        <div class="list-item-actions so-gestao">
           <button class="btn btn-ghost btn-sm" onclick="openModalCurso('${esc(c.id)}')">✏️ Editar</button>
           <button class="btn btn-danger" onclick="excluirCurso('${esc(c.id)}')">🗑</button>
         </div>

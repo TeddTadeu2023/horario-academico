@@ -69,6 +69,7 @@ function hideSuggestions() {
 
 // ── CRUD ──
 function openModalDocente(id) {
+  if (!exigirGestao()) return;
   disciplinasAtual = [];
   $('docenteId').value = '';
   $('docenteNome').value = '';
@@ -97,6 +98,7 @@ function openModalDocente(id) {
 }
 
 function salvarDocente() {
+  if (!exigirGestao()) return;
   const nome = $('docenteNome').value.trim();
   if (!nome) { toast('Informe o nome do docente', 'error'); return; }
   const id = $('docenteId').value || uid();
@@ -116,6 +118,7 @@ function salvarDocente() {
 }
 
 function excluirDocente(id) {
+  if (!exigirGestao()) return;
   if (!confirm('Excluir este docente? Aulas vinculadas serão removidas.')) return;
   state.docentes = state.docentes.filter((x) => x.id !== id);
   state.planos.forEach((p) => { p.aulas = p.aulas.filter((x) => x.docenteId !== id); });
@@ -153,7 +156,7 @@ function renderDocentes() {
           ${cursosDoc.length ? `<div class="list-item-tags"><span class="tag-label">Cursos:</span>${cursoChips}
             <span class="badge badge-green">${aulasDoc.length} aulas</span></div>` : ''}
         </div>
-        <div class="list-item-actions">
+        <div class="list-item-actions so-gestao">
           <button class="btn btn-ghost btn-sm" onclick="openModalDocente('${esc(d.id)}')">✏️ Editar</button>
           <button class="btn btn-danger" onclick="excluirDocente('${esc(d.id)}')">🗑</button>
         </div>

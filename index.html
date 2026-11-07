@@ -11,6 +11,138 @@
 </head>
 <body>
 
+<!-- ══════════════ TELA DE ACESSO (login / cadastro) ══════════════ -->
+<div class="auth-screen" id="telaAuth">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <img src="assets/img/logo-unianchieta.jpg" alt="UniAnchieta">
+      <div>
+        <div class="auth-title">Planejador de Horários</div>
+        <div class="auth-sub">Sistema de Coordenação Acadêmica</div>
+      </div>
+    </div>
+
+    <div class="alert alert-warn local-aviso" id="avisoLocal" hidden>
+      <span>🧪</span>
+      <div>
+        <strong>Modo local de teste.</strong> Contas e dados ficam salvos só neste navegador
+        e não é preciso confirmar o e-mail. Cada aba pode ter um usuário diferente.
+        <a href="#" id="btnApagarLocal">Apagar banco local</a>
+      </div>
+    </div>
+
+    <div class="auth-tabs" id="authTabs">
+      <button type="button" class="auth-tab" id="tab-login"    data-ir="login">Entrar</button>
+      <button type="button" class="auth-tab" id="tab-cadastro" data-ir="cadastro">Criar conta</button>
+    </div>
+
+    <div class="alert auth-msg" id="authMsg" hidden></div>
+
+    <!-- Carregando -->
+    <div class="auth-panel auth-center" data-tela="carregando">
+      <div class="spinner"></div>
+      <div class="auth-text">Carregando…</div>
+    </div>
+
+    <!-- Firebase não configurado -->
+    <div class="auth-panel" data-tela="config" hidden>
+      <div class="alert alert-warn">
+        <div>⚙️ <strong>Banco de dados não configurado.</strong><br>
+        Preencha <code>js/firebase-config.js</code> com os dados do seu projeto Firebase
+        (veja o passo a passo no README).</div>
+      </div>
+    </div>
+
+    <!-- Entrar -->
+    <form class="auth-panel" data-tela="login" id="formLogin" hidden novalidate>
+      <div class="field">
+        <label for="loginEmail">E-mail institucional</label>
+        <input id="loginEmail" type="email" autocomplete="username" placeholder="nome@anchieta.br" required>
+      </div>
+      <div class="field">
+        <label for="loginSenha">Senha</label>
+        <input id="loginSenha" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary auth-submit" id="btnEntrar" type="submit">Entrar</button>
+      <a href="#" class="auth-link" data-ir="recuperar">Esqueci minha senha</a>
+    </form>
+
+    <!-- Criar conta -->
+    <form class="auth-panel" data-tela="cadastro" id="formCadastro" hidden novalidate>
+      <div class="field">
+        <label for="cadNome">Nome completo</label>
+        <input id="cadNome" autocomplete="name" placeholder="Ex: Maria da Silva" maxlength="120" required>
+      </div>
+      <div class="field">
+        <label for="cadEmail">E-mail institucional</label>
+        <input id="cadEmail" type="email" autocomplete="username" placeholder="nome@anchieta.br" required>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="cadSenha">Senha</label>
+          <input id="cadSenha" type="password" autocomplete="new-password" minlength="8" placeholder="mín. 8 caracteres" required>
+        </div>
+        <div class="field">
+          <label for="cadSenha2">Confirmar senha</label>
+          <input id="cadSenha2" type="password" autocomplete="new-password" minlength="8" required>
+        </div>
+      </div>
+      <div class="auth-hint">Após confirmar seu e-mail, o acesso será liberado pela Gestão.</div>
+      <button class="btn btn-primary auth-submit" id="btnCadastrar" type="submit">Criar conta</button>
+    </form>
+
+    <!-- Recuperar senha -->
+    <form class="auth-panel" data-tela="recuperar" id="formRecuperar" hidden novalidate>
+      <div class="auth-text">Informe seu e-mail e enviaremos um link para criar uma nova senha.</div>
+      <div class="field">
+        <label for="recEmail">E-mail institucional</label>
+        <input id="recEmail" type="email" autocomplete="username" placeholder="nome@anchieta.br" required>
+      </div>
+      <button class="btn btn-primary auth-submit" id="btnRecuperar" type="submit">Enviar link</button>
+      <a href="#" class="auth-link" data-ir="login">← Voltar para o login</a>
+    </form>
+
+    <!-- Confirmar e-mail -->
+    <div class="auth-panel auth-center" data-tela="verificar" hidden>
+      <div class="auth-icon">✉️</div>
+      <div class="auth-text">
+        Confirme seu e-mail para continuar.<br>
+        Enviamos um link para <strong id="verificarEmail"></strong>.<br>
+        <small>Não chegou? Confira a caixa de spam.</small>
+      </div>
+      <button class="btn btn-primary auth-submit" id="btnJaConfirmei" type="button">Já confirmei</button>
+      <button class="btn btn-ghost btn-sm" id="btnReenviar" type="button">Reenviar e-mail</button>
+      <a href="#" class="auth-link" data-sair>Sair</a>
+    </div>
+
+    <!-- Aguardando aprovação -->
+    <div class="auth-panel auth-center" data-tela="pendente" hidden>
+      <div class="auth-icon">⏳</div>
+      <div class="auth-text">
+        Cadastro recebido!<br>
+        Sua conta <strong id="pendenteEmail"></strong> está <strong>aguardando aprovação da Gestão</strong>.<br>
+        Esta tela atualiza sozinha assim que o acesso for liberado.
+      </div>
+      <a href="#" class="auth-link" data-sair>Sair</a>
+    </div>
+
+    <!-- Bloqueado -->
+    <div class="auth-panel auth-center" data-tela="bloqueado" hidden>
+      <div class="auth-icon">⛔</div>
+      <div class="auth-text">Seu acesso foi bloqueado.<br>Fale com a coordenação se achar que é um engano.</div>
+      <a href="#" class="auth-link" data-sair>Sair</a>
+    </div>
+
+    <div class="auth-footer">
+      Prof. Tedd Tadeu · <span class="beta-badge">Versão Beta</span><br>
+      Sugestões: tedd.ribeiro@anchieta.br
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ APLICAÇÃO (após login) ══════════════ -->
+<div id="appRoot" hidden>
+
 <div class="anchieta-stripe"></div>
 
 <!-- ══════════════ HEADER ══════════════ -->
@@ -28,9 +160,12 @@
     <button class="nav-btn active" id="nav-horario"   data-page="horario">Grade</button>
     <button class="nav-btn"        id="nav-cursos"    data-page="cursos">Cursos</button>
     <button class="nav-btn"        id="nav-docentes"  data-page="docentes">Docentes</button>
-    <button class="nav-btn"        id="nav-salas"     data-page="salas">Salas</button>
+    <button class="nav-btn so-gestao" id="nav-salas"  data-page="salas">Salas</button>
     <button class="nav-btn"        id="nav-conflitos" data-page="conflitos">
       Conflitos <span class="badge-nav" id="badgeConflitos" hidden>0</span>
+    </button>
+    <button class="nav-btn so-gestao" id="nav-usuarios" data-page="usuarios">
+      Usuários <span class="badge-nav" id="badgePendentes" hidden>0</span>
     </button>
     <button class="nav-btn nav-guia" id="nav-guia" data-page="guia">✦ Guia</button>
   </nav>
@@ -40,15 +175,15 @@
       <a class="header-link" href="https://ava.anchieta.br/" target="_blank" rel="noopener">🎓 AVA</a>
       <a class="header-link" href="https://ng.anchieta.br/donline" target="_blank" rel="noopener">📋 Lyceum</a>
     </div>
-    <div class="header-author">
-      <div class="header-author-name">
-        <span>Prof. Tedd Tadeu</span>
-        <span class="beta-badge">Versão Beta</span>
+    <div class="header-user">
+      <div class="header-user-name">
+        <span id="userNome"></span>
+        <span class="badge" id="userPapel"></span>
       </div>
-      <a class="header-author-link"
-         href="mailto:tedd.ribeiro@anchieta.br?subject=Sugest%C3%A3o%20%E2%80%93%20Planejador%20de%20Hor%C3%A1rio">
-        ✉ Sugestões → tedd.ribeiro@anchieta.br
-      </a>
+      <div class="header-user-sub">
+        <span id="userEmail"></span> · <span id="syncStatus"></span>
+      </div>
+      <button class="header-logout" data-sair type="button">⎋ Sair</button>
     </div>
   </div>
 </header>
@@ -81,7 +216,7 @@
         <div class="turno-aulas">
           <div class="turno-aulas-head">
             <div class="mini-label">Horário de cada aula</div>
-            <div class="stepper">
+            <div class="stepper so-gestao">
               <button type="button" class="stepper-btn" id="btnMenosAula" title="Remover aula">−</button>
               <button type="button" class="stepper-btn" id="btnMaisAula"  title="Adicionar aula">+</button>
             </div>
@@ -103,7 +238,7 @@
       </div>
     </section>
 
-    <section>
+    <section class="so-gestao">
       <div class="section-label">Dados</div>
       <div class="dados-actions">
         <button class="btn btn-ghost btn-sm" id="btnExportar">⬇ Exportar JSON</button>
@@ -114,6 +249,11 @@
         <button class="btn btn-sm btn-limpar" id="btnLimpar">🗑 Limpar tudo</button>
       </div>
     </section>
+
+    <div class="sidebar-credits">
+      Prof. Tedd Tadeu · <span class="beta-badge">Beta</span><br>
+      <a href="mailto:tedd.ribeiro@anchieta.br?subject=Sugest%C3%A3o%20%E2%80%93%20Planejador%20de%20Hor%C3%A1rio">✉ Sugestões</a>
+    </div>
 
   </aside>
 
@@ -129,8 +269,8 @@
         </div>
         <div class="page-actions">
           <span class="curso-ativo-label" id="cursoAtivoLabel"></span>
-          <button class="btn btn-ghost btn-sm" id="btnNovoPlano" title="Criar um novo plano de horário independente">📄 Novo Plano</button>
-          <button class="btn btn-primary btn-sm" id="btnAlocarAula">+ Alocar Aula</button>
+          <button class="btn btn-ghost btn-sm so-gestao" id="btnNovoPlano" title="Criar um novo plano de horário independente">📄 Novo Plano</button>
+          <button class="btn btn-primary btn-sm so-gestao" id="btnAlocarAula">+ Alocar Aula</button>
           <button class="btn btn-sm" id="btnGeral" title="Resumo semanal por professor">📊 RESUMO</button>
         </div>
       </div>
@@ -174,7 +314,7 @@
           <div class="page-title">📚 <span>Cursos</span></div>
           <div class="page-sub">Gerencie os cursos e disciplinas oferecidos</div>
         </div>
-        <button class="btn btn-primary" id="btnNovoCurso">+ Novo Curso</button>
+        <button class="btn btn-primary so-gestao" id="btnNovoCurso">+ Novo Curso</button>
       </div>
       <div id="listaCursos"></div>
     </div>
@@ -186,7 +326,7 @@
           <div class="page-title">👤 <span>Docentes</span></div>
           <div class="page-sub">Cadastre e gerencie o corpo docente</div>
         </div>
-        <button class="btn btn-primary" id="btnNovoDocente">+ Novo Docente</button>
+        <button class="btn btn-primary so-gestao" id="btnNovoDocente">+ Novo Docente</button>
       </div>
       <div id="listaDocentes"></div>
     </div>
@@ -198,9 +338,20 @@
           <div class="page-title">🏫 <span>Salas &amp; Espaços</span></div>
           <div class="page-sub">Salas de aula, laboratórios, oficinas e outros espaços</div>
         </div>
-        <button class="btn btn-primary" id="btnNovaSala">+ Nova Sala</button>
+        <button class="btn btn-primary so-gestao" id="btnNovaSala">+ Nova Sala</button>
       </div>
       <div id="listaSalas"></div>
+    </div>
+
+    <!-- PAGE: USUÁRIOS (somente Gestão) -->
+    <div class="page" id="page-usuarios">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🔐 <span>Usuários</span></div>
+          <div class="page-sub">Aprove novos cadastros e defina o nível de acesso: Gestão edita tudo, Professor apenas visualiza</div>
+        </div>
+      </div>
+      <div id="listaUsuarios"></div>
     </div>
 
     <!-- PAGE: CONFLITOS -->
@@ -239,6 +390,11 @@
             <li>6 · Alocar Aulas</li><li class="sep">›</li>
             <li>7 · Revisar</li>
           </ol>
+        </div>
+
+        <div class="guia-tip">
+          🔐 <strong>Níveis de acesso:</strong> a <strong>Gestão</strong> cadastra e edita tudo; o <strong>Professor</strong> apenas visualiza.
+          Novos cadastros (somente e-mails @anchieta.br) ficam pendentes até a Gestão aprová-los na aba <strong>Usuários</strong>.
         </div>
 
         <!-- PASSO 1 -->
@@ -482,6 +638,10 @@
 
   </main>
 </div>
+
+</div><!-- /appRoot -->
+
+<div class="local-banner" id="bannerLocal" hidden title="Firebase não configurado: usando o banco local deste navegador">🧪 Modo local de teste</div>
 
 <div class="toast-container" id="toastContainer"></div>
 
@@ -733,9 +893,19 @@
 </div>
 
 <!-- ══════════════ SCRIPTS (ordem importa) ══════════════ -->
+<!-- Firebase (login + banco de dados) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/banco-local.js"></script>
+
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/state.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/usuarios.js"></script>
 <script src="js/turnos.js"></script>
 <script src="js/conflitos.js"></script>
 <script src="js/planos.js"></script>

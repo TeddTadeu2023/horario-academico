@@ -3,6 +3,8 @@
 // ─────────────────────────────────────────
 
 function showPage(id) {
+  // Páginas exclusivas da Gestão
+  if (PAGINAS_SO_GESTAO.includes(id) && !podeEditar()) id = 'horario';
   document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach((b) => b.classList.remove('active'));
   $('page-' + id).classList.add('active');
@@ -11,10 +13,11 @@ function showPage(id) {
   if (id === 'docentes')  renderDocentes();
   if (id === 'salas')     renderSalas();
   if (id === 'conflitos') { verificarConflitos(); renderConflitos(); }
+  if (id === 'usuarios')  renderUsuarios();
   if (id === 'horario')   renderGrade();
 }
 
-// Re-renderiza tudo que depende do estado (após import/limpar)
+// Re-renderiza tudo que depende do estado
 function renderTudo() {
   populateCursoAtivo();
   verificarConflitos();
@@ -25,6 +28,7 @@ function renderTudo() {
   renderSalas();
   renderConflitos();
   if (modoGeral) { populateResumoDocente(); renderViewGeral(); }
+  if (podeEditar() && $('page-usuarios').classList.contains('active')) renderUsuarios();
 }
 
 function bindEventos() {
@@ -80,12 +84,25 @@ function bindEventos() {
 function init() {
   preencherSelects();
   bindEventos();
-  load();
-  loadTurnoPresets();
-  populateCursoAtivo();
-  verificarConflitos();
-  renderPlanosTabs();
-  selecionarTurno('manha');   // monta `horarios` e renderiza a grade
+  bindAuth();
+  buildHorariosFromEditor();
+
+  try {
+    initFirebase();
+  } catch (e) {
+    console.error(e);
+    return mostrarTela('config');
+  }
+  if (fb.local) {
+    $('avisoLocal').hidden = false;
+    $('bannerLocal').hidden = false;
+    $('btnApagarLocal').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (confirm('Apagar TODAS as contas e dados do banco local deste navegador?')) fb.apagarTudo();
+    });
+  }
+  mostrarTela('carregando');
+  fb.auth.onAuthStateChanged(aoMudarAutenticacao);
 }
 
 init();

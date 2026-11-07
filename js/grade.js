@@ -54,7 +54,9 @@ function gradeVaziaHTML() {
           Cada plano representa uma turma com sua própria grade semanal.
         </div>
       </div>
-      ${state.cursos.length
+      ${!podeEditar()
+        ? '<div class="alert alert-info">A Gestão ainda não publicou nenhum plano de horário.</div>'
+        : state.cursos.length
         ? '<button class="btn btn-primary" style="padding:13px 36px;font-size:13px;" onclick="openModalNovoPlano()">📄 Criar Primeiro Plano</button>'
         : '<div class="alert alert-warn">⚠️ Cadastre os <strong>Cursos</strong> primeiro antes de criar um plano.</div>'}
     </div>`;
@@ -86,13 +88,16 @@ function renderGrade() {
   html += '<div class="grid-cell corner"></div>';
   html += dias.map((d) => `<div class="grid-cell day-header">${DIAS_SHORT[d] || d}</div>`).join('');
 
+  const editavel = podeEditar();
   horarios.forEach((hr) => {
     html += `<div class="grid-cell time-header">${esc(hr.label)}</div>`;
     dias.forEach((d) => {
       const slot = aulasPlano.filter((a) => a.dia === d && a.horario === hr.value && (!filtro || a.cursoId === filtro));
       const conflito = slotTemConflito(d, hr.value, slot);
-      html += `<div class="grid-cell" onclick="openModalAula('${d}','${esc(hr.value)}')">`
-        + slot.map((a) => aulaBlockHTML(a, { editavel: true, conflito })).join('')
+      html += (editavel
+        ? `<div class="grid-cell" onclick="openModalAula('${d}','${esc(hr.value)}')">`
+        : '<div class="grid-cell readonly">')
+        + slot.map((a) => aulaBlockHTML(a, { editavel, conflito })).join('')
         + '</div>';
     });
   });

@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// Regras de segurança do Firestore — Planejador de Horários
+// Cole este conteúdo em: Console do Firebase → Firestore Database → Regras → Publicar
+//
+// Níveis (campo `papel` em usuarios/{uid}):
+//   pendente  → cadastrou, aguarda aprovação (sem acesso aos dados)
+//   professor → apenas visualiza
+//   gestao    → visualiza e edita tudo, aprova usuários
+//   bloqueado → sem acesso
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null;
+    }
+    function emailAnchieta() {
+      return logado() && request.auth.token.email.lower().matches('.*@anchieta[.]br$');
+    }
+    function verificado() {
+      return emailAnchieta() && request.auth.token.email_verified == true;
+    }
+    // Mesma lista de ADMINS_INICIAIS em js/config.js
+    function emailAdminInicial() {
+      return emailAnchieta() && request.auth.token.email.lower() in ['tedd.ribeiro@anchieta.br'];
+    }
+    function perfil() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+    }
+    function temPerfil() {
+      return exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+    function ehGestao() {
+      return verificado() && (emailAdminInicial() || (temPerfil() && perfil().papel == 'gestao'));
+    }
+    function ehProfessor() {
+      return verificado() && temPerfil() && perfil().papel == 'professor';
+    }
+
+    // ── Perfis de usuário ──
+    match /usuarios/{uid} {
+      // Cada um lê o próprio perfil; Gestão lê todos
+      allow read: if (logado() && request.auth.uid == uid) || ehGestao();
+
+      // Autocadastro: só o próprio usuário, com e-mail @anchieta.br, sempre como "pendente"
+      // (exceto os admins iniciais, que já nascem como "gestao")
+      allow create: if emailAnchieta()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['nome', 'email', 'papel', 'criadoEm'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() <= 120
+        && (request.resource.data.papel == 'pendente'
+            || (request.resource.data.papel == 'gestao' && emailAdminInicial()));
+
+      // Só a Gestão altera o nível de acesso — e não pode alterar o próprio
+      allow update: if ehGestao()
+        && request.auth.uid != uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['papel'])
+        && request.resource.data.papel in ['pendente', 'professor', 'gestao', 'bloqueado'];
+
+      allow delete: if false;
+    }
+
+    // ── Planejamento (cursos, docentes, salas, planos, turnos) ──
+    match /dados/{doc} {
+      allow read: if ehGestao() || ehProfessor();
+      allow write: if ehGestao();
+    }
+  }
+}

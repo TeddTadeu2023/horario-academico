@@ -1,43 +1,48 @@
 // ─────────────────────────────────────────
 // TURNOS — horário editável de cada aula
 // ─────────────────────────────────────────
+// Os horários ficam no banco (state.turnos) para que todos vejam a mesma grade.
+// O turno selecionado (manhã/tarde/noite) é escolha local de cada tela.
 
 let turnoAtivo = 'manha';
 
-// Horários por turno em memória (persistidos separadamente do estado principal)
-let TURNO_HORARIOS = {
-  manha: TURNO_DEFAULTS.manha.map((h) => ({ ...h })),
-  tarde: TURNO_DEFAULTS.tarde.map((h) => ({ ...h })),
-  noite: TURNO_DEFAULTS.noite.map((h) => ({ ...h })),
-};
+const clonarTurnos = (t) => ({
+  manha: t.manha.map((h) => ({ ...h })),
+  tarde: t.tarde.map((h) => ({ ...h })),
+  noite: t.noite.map((h) => ({ ...h })),
+});
 
-function saveTurnoPresets() {
-  localStorage.setItem(STORAGE_KEY_TURNOS, JSON.stringify(TURNO_HORARIOS));
+let TURNO_HORARIOS = clonarTurnos(TURNO_DEFAULTS);
+
+// Copia os horários vindos do banco (ou volta ao padrão)
+function aplicarTurnosDoEstado() {
+  const salvo = state.turnos || {};
+  TURNO_HORARIOS = clonarTurnos(TURNO_DEFAULTS);
+  ['manha', 'tarde', 'noite'].forEach((t) => {
+    if (Array.isArray(salvo[t]) && salvo[t].length) TURNO_HORARIOS[t] = salvo[t].map((h) => ({ ...h }));
+  });
+  renderAulasEditor();
+  buildHorariosFromEditor();
 }
 
-function loadTurnoPresets() {
-  const raw = localStorage.getItem(STORAGE_KEY_TURNOS);
-  if (!raw) return;
-  try {
-    const saved = JSON.parse(raw);
-    ['manha', 'tarde', 'noite'].forEach((t) => {
-      if (saved[t] && saved[t].length) TURNO_HORARIOS[t] = saved[t];
-    });
-  } catch (e) { console.warn('Turnos salvos inválidos', e); }
+function saveTurnoPresets() {
+  state.turnos = clonarTurnos(TURNO_HORARIOS);
+  save();
 }
 
 // Editor de horários na sidebar para o turno ativo
 function renderAulasEditor() {
   const wrap = $('aulasHorariosEditor');
+  const bloqueado = !podeEditar() ? 'disabled' : '';
   wrap.innerHTML = '';
   TURNO_HORARIOS[turnoAtivo].forEach((aula, i) => {
     const row = document.createElement('div');
     row.className = 'aula-time-row';
     row.innerHTML = `
       <span class="num">${i + 1}ª</span>
-      <input type="time" value="${esc(aula.ini)}" data-idx="${i}" data-campo="ini">
+      <input type="time" value="${esc(aula.ini)}" data-idx="${i}" data-campo="ini" ${bloqueado}>
       <span class="sep">–</span>
-      <input type="time" value="${esc(aula.fim)}" data-idx="${i}" data-campo="fim">`;
+      <input type="time" value="${esc(aula.fim)}" data-idx="${i}" data-campo="fim" ${bloqueado}>`;
     row.querySelectorAll('input').forEach((inp) => {
       inp.addEventListener('input', () => updateAulaHorario(+inp.dataset.idx, inp.dataset.campo, inp.value));
     });
@@ -46,6 +51,7 @@ function renderAulasEditor() {
 }
 
 function updateAulaHorario(idx, campo, val) {
+  if (!exigirGestao()) return;
   TURNO_HORARIOS[turnoAtivo][idx][campo] = val;
   saveTurnoPresets();
   buildHorariosFromEditor();
@@ -56,6 +62,7 @@ function minutosParaHora(total) {
 }
 
 function changeAulasTurno(delta) {
+  if (!exigirGestao()) return;
   const lista = TURNO_HORARIOS[turnoAtivo];
   if (delta > 0) {
     // Nova aula começa no fim da última e dura DURACAO_AULA_MIN
@@ -82,9 +89,6 @@ function buildHorariosFromEditor() {
 
 function selecionarTurno(t) {
   turnoAtivo = t;
-  if (!TURNO_HORARIOS[t] || !TURNO_HORARIOS[t].length) {
-    TURNO_HORARIOS[t] = TURNO_DEFAULTS[t].map((h) => ({ ...h }));
-  }
   $('turnoSel').value = t;
   renderAulasEditor();
   buildHorariosFromEditor();

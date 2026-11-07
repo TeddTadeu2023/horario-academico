@@ -160,7 +160,7 @@ function blocoPlanoHTML(plano) {
           ${meta ? `<span>${esc(meta)}</span>` : ''}
           <span class="badge badge-blue">${qtd} aula${qtd !== 1 ? 's' : ''}</span>
           ${nConf ? `<span class="badge badge-red">⚠️ ${nConf} conflito${nConf > 1 ? 's' : ''}</span>` : '<span class="badge badge-green">✅ ok</span>'}
-          <button class="btn btn-ghost btn-sm btn-tiny" onclick="abrirPlanoDoResumo('${esc(plano.id)}')">✏️ Editar</button>
+          <button class="btn btn-ghost btn-sm btn-tiny" onclick="abrirPlanoDoResumo('${esc(plano.id)}')">📄 Abrir plano</button>
         </div>
       </div>`;
 

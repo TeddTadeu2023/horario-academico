@@ -1,12 +1,16 @@
 // ─────────────────────────────────────────
-// ESTADO DA APLICAÇÃO + PERSISTÊNCIA
+// ESTADO DA APLICAÇÃO
 // ─────────────────────────────────────────
+// O banco (Firestore, documento DOC_DADOS) é a fonte da verdade.
+// `planoAtivoId` e `conflitos` são locais: não vão para o banco.
 
 function estadoVazio() {
   return {
-    cursos: [], docentes: [], salas: [], conflitos: [],
+    cursos: [], docentes: [], salas: [],
     planos: [],        // [{id, cursoId, nome, semestre, ano, turma, periodo, cor, labelAba, desc, aulas:[]}]
-    planoAtivoId: '',  // id do plano em foco
+    turnos: null,      // {manha:[{ini,fim}], tarde:[...], noite:[...]}
+    conflitos: [],     // calculado (verificarConflitos)
+    planoAtivoId: '',  // aba em foco nesta tela
   };
 }
 
@@ -15,32 +19,47 @@ let state = estadoVazio();
 // Linhas da grade do turno ativo: [{label, value}]
 let horarios = [];
 
+// Grava no banco (só a Gestão; as regras do Firestore também bloqueiam os demais)
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (podeEditar()) agendarGravacao();
 }
 
-// Garante consistência do estado (usado no load e no import)
-function normalizarEstado(s) {
-  const base = estadoVazio();
-  const out = { ...base, ...s };
-  ['cursos', 'docentes', 'salas', 'conflitos', 'planos'].forEach((k) => {
-    if (!Array.isArray(out[k])) out[k] = [];
+// Parte do estado que é persistida
+function dadosParaSalvar() {
+  const { cursos, docentes, salas, planos, turnos } = state;
+  // JSON round-trip remove `undefined`, que o Firestore não aceita
+  return JSON.parse(JSON.stringify({ cursos, docentes, salas, planos, turnos }));
+}
+
+// Garante consistência (usado ao receber do banco e ao importar JSON)
+function normalizarEstado(s, planoAtivoId = '') {
+  const out = estadoVazio();
+  ['cursos', 'docentes', 'salas', 'planos'].forEach((k) => {
+    if (Array.isArray(s?.[k])) out[k] = s[k];
   });
+  if (s?.turnos && typeof s.turnos === 'object') out.turnos = s.turnos;
   // Só ficam planos vinculados a um curso
-  out.planos = out.planos.filter((p) => p.cursoId);
+  out.planos = out.planos.filter((p) => p && p.cursoId);
   out.planos.forEach((p) => { if (!Array.isArray(p.aulas)) p.aulas = []; });
-  if (!out.planos.find((p) => p.id === out.planoAtivoId)) {
-    out.planoAtivoId = out.planos.length ? out.planos[0].id : '';
-  }
+  out.planoAtivoId = out.planos.find((p) => p.id === planoAtivoId)
+    ? planoAtivoId
+    : (out.planos[0]?.id || '');
   return out;
 }
 
-function load() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try { state = JSON.parse(raw); } catch (e) { console.warn('Estado salvo inválido', e); }
+// Dados salvos no navegador pela versão antiga (sem login) — para migração
+function lerDadosLocaisLegados() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const data = normalizarEstado(JSON.parse(raw));
+    const turnos = JSON.parse(localStorage.getItem(STORAGE_KEY_TURNOS) || 'null');
+    if (turnos) data.turnos = turnos;
+    const vazio = !data.cursos.length && !data.docentes.length && !data.salas.length && !data.planos.length;
+    return vazio ? null : data;
+  } catch (e) {
+    return null;
   }
-  state = normalizarEstado(state);
 }
 
 // Plano ativo (objeto)

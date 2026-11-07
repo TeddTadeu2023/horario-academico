@@ -2,7 +2,27 @@
 // CONFIGURAÇÃO / CONSTANTES
 // ─────────────────────────────────────────
 
-// Chaves do localStorage (não alterar: mudar a chave "perde" os dados já salvos)
+// ── Acesso ──
+// Só e-mails deste domínio podem criar conta / entrar
+const DOMINIO_PERMITIDO = 'anchieta.br';
+// Contas que já nascem como Gestão (precisa haver ao menos uma para aprovar as demais).
+// Se mudar esta lista, mude também em firestore.rules.
+const ADMINS_INICIAIS = ['tedd.ribeiro@anchieta.br'];
+
+const PAPEIS = {
+  gestao:    { label: 'Gestão',    classe: 'badge-blue' },
+  professor: { label: 'Professor', classe: 'badge-green' },
+  pendente:  { label: 'Pendente',  classe: 'badge-yellow' },
+  bloqueado: { label: 'Bloqueado', classe: 'badge-red' },
+};
+
+// Abas que o Professor não vê
+const PAGINAS_SO_GESTAO = ['salas', 'usuarios'];
+
+// Documento do Firestore com todo o planejamento
+const DOC_DADOS = 'dados/planejamento';
+
+// Chaves do localStorage das versões antigas (usadas só para migrar dados para o banco)
 const STORAGE_KEY        = 'anchieta_horario_v5';
 const STORAGE_KEY_TURNOS = 'anchieta_turnos_v2';
 
@@ -67,8 +87,7 @@ const DURACAO_AULA_MIN = 50;
 // Opções reutilizadas nos <select data-options="...">
 const ANO_PADRAO = '2026';
 const SELECT_OPTIONS = {
-  semestres: ['1º Semestre', '2º Semestre', '3º Semestre', '4º Semestre',
-              '5º Semestre', '6º Semestre', '7º Semestre', '8º Semestre'],
+  semestres: ['1º Semestre', '2º Semestre'],
   anos: ['2024', '2025', '2026', '2027', '2028'],
   periodos: ['Matutino', 'Vespertino', 'Noturno', 'Integral', 'EaD'],
   periodosLetivos: ['1º e 2º', '3º e 4º', '5º e 6º', '7º e 8º', '9º e 10º'],

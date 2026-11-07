@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planejador de Horário — Grupo Anchieta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="anchieta-stripe"></div>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+  <div class="brand">
+    <img class="brand-logo" src="assets/img/logo-unianchieta.jpg" alt="UniAnchieta">
+    <div class="brand-divider"></div>
+    <div class="brand-text">
+      <div class="brand-title">Planejador de Horários</div>
+      <div class="brand-sub">Sistema de Coordenação Acadêmica</div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" id="nav-horario"   data-page="horario">Grade</button>
+    <button class="nav-btn"        id="nav-cursos"    data-page="cursos">Cursos</button>
+    <button class="nav-btn"        id="nav-docentes"  data-page="docentes">Docentes</button>
+    <button class="nav-btn"        id="nav-salas"     data-page="salas">Salas</button>
+    <button class="nav-btn"        id="nav-conflitos" data-page="conflitos">
+      Conflitos <span class="badge-nav" id="badgeConflitos" hidden>0</span>
+    </button>
+    <button class="nav-btn nav-guia" id="nav-guia" data-page="guia">✦ Guia</button>
+  </nav>
+
+  <div class="header-right">
+    <div class="header-links">
+      <a class="header-link" href="https://ava.anchieta.br/" target="_blank" rel="noopener">🎓 AVA</a>
+      <a class="header-link" href="https://ng.anchieta.br/donline" target="_blank" rel="noopener">📋 Lyceum</a>
+    </div>
+    <div class="header-author">
+      <div class="header-author-name">
+        <span>Prof. Tedd Tadeu</span>
+        <span class="beta-badge">Versão Beta</span>
+      </div>
+      <a class="header-author-link"
+         href="mailto:tedd.ribeiro@anchieta.br?subject=Sugest%C3%A3o%20%E2%80%93%20Planejador%20de%20Hor%C3%A1rio">
+        ✉ Sugestões → tedd.ribeiro@anchieta.br
+      </a>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+
+    <section>
+      <div class="section-label">Filtrar por Curso</div>
+      <select id="cursoAtivo">
+        <option value="">— Todos os cursos —</option>
+      </select>
+      <div class="sidebar-hint" id="cursoFiltroInfo"></div>
+    </section>
+
+    <section>
+      <div class="section-label">Turno</div>
+      <div class="card turno-card">
+        <div class="field">
+          <label for="turnoSel">Período</label>
+          <select id="turnoSel">
+            <option value="manha">🌅 Manhã</option>
+            <option value="tarde">☀️ Tarde</option>
+            <option value="noite">🌙 Noite</option>
+          </select>
+        </div>
+
+        <div class="turno-aulas">
+          <div class="turno-aulas-head">
+            <div class="mini-label">Horário de cada aula</div>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" id="btnMenosAula" title="Remover aula">−</button>
+              <button type="button" class="stepper-btn" id="btnMaisAula"  title="Adicionar aula">+</button>
+            </div>
+          </div>
+          <div class="aulas-editor" id="aulasHorariosEditor"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">Dias da Semana</div>
+      <div class="dias-list" id="diasSemana">
+        <label class="dia-option"><input type="checkbox" value="SEG" checked> Segunda</label>
+        <label class="dia-option"><input type="checkbox" value="TER" checked> Terça</label>
+        <label class="dia-option"><input type="checkbox" value="QUA" checked> Quarta</label>
+        <label class="dia-option"><input type="checkbox" value="QUI" checked> Quinta</label>
+        <label class="dia-option"><input type="checkbox" value="SEX" checked> Sexta</label>
+        <label class="dia-option"><input type="checkbox" value="SAB"> Sábado</label>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">Dados</div>
+      <div class="dados-actions">
+        <button class="btn btn-ghost btn-sm" id="btnExportar">⬇ Exportar JSON</button>
+        <label class="btn btn-ghost btn-sm">
+          ⬆ Importar JSON
+          <input type="file" accept=".json" id="inputImportar" hidden>
+        </label>
+        <button class="btn btn-sm btn-limpar" id="btnLimpar">🗑 Limpar tudo</button>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main class="main">
+
+    <!-- PAGE: GRADE -->
+    <div class="page active" id="page-horario">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Grade <span>Semanal</span></div>
+          <div class="page-sub" id="planoSubtitle">Clique em uma célula vazia para alocar uma aula</div>
+        </div>
+        <div class="page-actions">
+          <span class="curso-ativo-label" id="cursoAtivoLabel"></span>
+          <button class="btn btn-ghost btn-sm" id="btnNovoPlano" title="Criar um novo plano de horário independente">📄 Novo Plano</button>
+          <button class="btn btn-primary btn-sm" id="btnAlocarAula">+ Alocar Aula</button>
+          <button class="btn btn-sm" id="btnGeral" title="Resumo semanal por professor">📊 RESUMO</button>
+        </div>
+      </div>
+
+      <div class="planos-bar" id="planosTabs"></div>
+
+      <!-- VIEW NORMAL -->
+      <div id="viewNormal">
+        <div class="stats-row" id="statsRow"></div>
+        <div id="gradeWrap"></div>
+        <div class="progress-section" id="progressSection"></div>
+      </div>
+
+      <!-- VIEW RESUMO -->
+      <div id="viewGeral" hidden>
+        <div class="resumo-head" id="resumoCabecalho">
+          <div>
+            <div class="page-title">📊 <span>Resumo</span> Semanal</div>
+            <div class="page-sub">Selecione um professor para ver sua grade completa, ou visualize todos os planos</div>
+          </div>
+          <div class="resumo-controls">
+            <span id="geralConflitosLabel"></span>
+            <div class="resumo-filter">
+              <label class="mini-label" for="resumoDocente">👤 Professor</label>
+              <select id="resumoDocente">
+                <option value="">— Todos os planos —</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost btn-sm resumo-print" id="btnImprimir" title="Imprimir / Salvar PDF">🖨 Imprimir</button>
+          </div>
+        </div>
+        <div class="resumo-docente-card no-print" id="resumoDocenteCard" hidden></div>
+        <div id="geralPlanos"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: CURSOS -->
+    <div class="page" id="page-cursos">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📚 <span>Cursos</span></div>
+          <div class="page-sub">Gerencie os cursos e disciplinas oferecidos</div>
+        </div>
+        <button class="btn btn-primary" id="btnNovoCurso">+ Novo Curso</button>
+      </div>
+      <div id="listaCursos"></div>
+    </div>
+
+    <!-- PAGE: DOCENTES -->
+    <div class="page" id="page-docentes">
+      <div class="page-header">
+        <div>
+          <div class="page-title">👤 <span>Docentes</span></div>
+          <div class="page-sub">Cadastre e gerencie o corpo docente</div>
+        </div>
+        <button class="btn btn-primary" id="btnNovoDocente">+ Novo Docente</button>
+      </div>
+      <div id="listaDocentes"></div>
+    </div>
+
+    <!-- PAGE: SALAS -->
+    <div class="page" id="page-salas">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🏫 <span>Salas &amp; Espaços</span></div>
+          <div class="page-sub">Salas de aula, laboratórios, oficinas e outros espaços</div>
+        </div>
+        <button class="btn btn-primary" id="btnNovaSala">+ Nova Sala</button>
+      </div>
+      <div id="listaSalas"></div>
+    </div>
+
+    <!-- PAGE: CONFLITOS -->
+    <div class="page" id="page-conflitos">
+      <div class="page-header">
+        <div>
+          <div class="page-title">⚠️ <span>Conflitos</span></div>
+          <div class="page-sub">Verificação de sobreposições de docentes e salas</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btnReverificar">🔄 Re-verificar</button>
+      </div>
+      <div id="listaConflitos"></div>
+    </div>
+
+    <!-- PAGE: GUIA -->
+    <div class="page" id="page-guia">
+      <div class="page-header">
+        <div>
+          <div class="page-title">✦ <span>Guia de Aprendizagem</span></div>
+          <div class="page-sub">Passo a passo para utilizar o Planejador da forma correta e na sequência lógica</div>
+        </div>
+      </div>
+
+      <div class="guia">
+
+        <!-- SEQUÊNCIA LÓGICA -->
+        <div class="guia-hero">
+          <div class="guia-hero-title">Sequência Lógica de Uso</div>
+          <div class="guia-hero-sub">Siga esta ordem para configurar o sistema antes de montar os horários.</div>
+          <ol class="guia-seq">
+            <li>1 · Salas</li><li class="sep">›</li>
+            <li>2 · Docentes</li><li class="sep">›</li>
+            <li>3 · Cursos</li><li class="sep">›</li>
+            <li>4 · Turno</li><li class="sep">›</li>
+            <li>5 · Novo Plano</li><li class="sep">›</li>
+            <li>6 · Alocar Aulas</li><li class="sep">›</li>
+            <li>7 · Revisar</li>
+          </ol>
+        </div>
+
+        <!-- PASSO 1 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">1</span>
+            <div>
+              <div class="guia-step-title">Cadastrar Salas &amp; Espaços</div>
+              <div class="guia-step-path">Aba: Salas → Botão: + Nova Sala</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <p>Cadastre todos os espaços físicos disponíveis — salas de aula, laboratórios, oficinas, auditórios. O sistema usa essas informações para detectar conflitos de sala automaticamente entre todos os planos.</p>
+            <div class="mock">
+              <div class="mock-title">🏫 Exemplo de salas cadastradas</div>
+              <div class="mock-body">
+                <div class="mock-row">
+                  <div><div class="mock-row-name">💻 Lab. Informática A</div><div class="mock-row-sub">Laboratório · 30 alunos · Bloco B · 30 PCs, Projetor</div></div>
+                  <span class="mock-pill">8 aulas</span>
+                </div>
+                <div class="mock-row">
+                  <div><div class="mock-row-name">🏫 Sala 201</div><div class="mock-row-sub">Sala de Aula · 40 alunos · Bloco A · Projetor, Ar-cond.</div></div>
+                  <span class="mock-pill">5 aulas</span>
+                </div>
+                <div class="mock-row">
+                  <div><div class="mock-row-name">🔧 Oficina Mecânica</div><div class="mock-row-sub">Oficina · 25 alunos · Bloco C · Bancadas, Ferramentas</div></div>
+                  <span class="mock-pill">3 aulas</span>
+                </div>
+              </div>
+            </div>
+            <div class="guia-tip">💡 <strong>Dica:</strong> Preencha a capacidade e os recursos de cada sala. Isso facilita a escolha do espaço ideal na hora de alocar as aulas.</div>
+          </div>
+        </article>
+
+        <!-- PASSO 2 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">2</span>
+            <div>
+              <div class="guia-step-title">Cadastrar Docentes</div>
+              <div class="guia-step-path">Aba: Docentes → Botão: + Novo Docente</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <p>Cadastre cada professor uma única vez. O campo de <strong>Disciplinas que leciona</strong> é incremental — escreva o nome e pressione <kbd>Enter</kbd> para adicionar como tag. Um mesmo docente pode ser alocado em múltiplos cursos e planos.</p>
+            <div class="mock">
+              <div class="mock-title">👤 Campo de disciplinas — entrada incremental por tags</div>
+              <div class="mock-body">
+                <div class="mock-chipbox">
+                  <div class="chip-list">
+                    <span class="chip">Algoritmos <span class="chip-del">×</span></span>
+                    <span class="chip">Estrutura de Dados <span class="chip-del">×</span></span>
+                    <span class="chip">Python <span class="chip-del">×</span></span>
+                  </div>
+                  <div class="mock-chipbox-input">
+                    <span>Digite uma disciplina e pressione Enter…</span>
+                    <button class="btn btn-primary btn-xs" type="button" tabindex="-1">+ Add</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="guia-tip">💡 <strong>Importante:</strong> O sistema bloqueia o mesmo docente em dois horários simultâneos — mesmo em planos diferentes. Cadastre cada professor apenas uma vez.</div>
+          </div>
+        </article>
+
+        <!-- PASSO 3 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">3</span>
+            <div>
+              <div class="guia-step-title">Cadastrar Cursos</div>
+              <div class="guia-step-path">Aba: Cursos → Botão: + Novo Curso</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <p>Cadastre cada curso com suas informações acadêmicas. Os dados aqui serão usados automaticamente ao criar um Plano de Horário — sem cursos cadastrados, não é possível criar planos.</p>
+            <div class="mock">
+              <div class="mock-title">📚 Campos do formulário Novo Curso</div>
+              <div class="mock-body mock-grid3">
+                <div class="full">
+                  <div class="mock-label">Nome do Curso *</div>
+                  <div class="mock-input">Análise e Desenvolvimento de Sistemas</div>
+                </div>
+                <div><div class="mock-label">Semestre</div><div class="mock-input">3º Semestre</div></div>
+                <div><div class="mock-label">Horário</div><div class="mock-input">Noturno</div></div>
+                <div><div class="mock-label">Período</div><div class="mock-input">5º e 6º</div></div>
+                <div>
+                  <div class="mock-label">Cor</div>
+                  <div class="mock-swatches">
+                    <span style="background:#003E7E"></span>
+                    <span style="background:#C8102E"></span>
+                    <span style="background:#007A4D"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="guia-tip">💡 <strong>Dica:</strong> Cada curso recebe uma cor de identificação que aparece na grade visual. Use cores distintas para facilitar a leitura.</div>
+          </div>
+        </article>
+
+        <!-- PASSO 4 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">4</span>
+            <div>
+              <div class="guia-step-title">Configurar o Turno</div>
+              <div class="guia-step-path">Painel lateral → Seção: Turno</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <p>Antes de criar o plano e alocar aulas, configure o turno no painel lateral. Selecione <strong>Manhã</strong>, <strong>Tarde</strong> ou <strong>Noite</strong> — os horários de cada aula carregam automaticamente. Você pode editar o início e fim de cada aula individualmente.</p>
+            <div class="mock">
+              <div class="mock-title">⏰ Configuração do turno na barra lateral</div>
+              <div class="mock-body">
+                <div>
+                  <div class="mock-label">Período</div>
+                  <div class="mock-input focus">🌙 Noite ▾</div>
+                </div>
+                <div class="mock-time"><b>1ª</b> 19:10 – 20:00</div>
+                <div class="mock-time"><b>2ª</b> 20:10 – 21:00</div>
+                <div class="mock-time"><b>3ª</b> 21:10 – 22:00</div>
+                <div class="mock-time"><b>4ª</b> 22:10 – 23:00</div>
+              </div>
+            </div>
+            <div class="guia-tip">💡 Use os botões <strong>+</strong> e <strong>−</strong> para adicionar ou remover aulas do turno. Os horários configurados aqui definem as linhas disponíveis na grade.</div>
+          </div>
+        </article>
+
+        <!-- PASSO 5 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">5</span>
+            <div>
+              <div class="guia-step-title">Criar Plano de Horário</div>
+              <div class="guia-step-path">Aba: Grade → Botão: 📄 Novo Plano</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <p>Cada <strong>Plano</strong> é uma turma com grade própria. Selecione o curso no dropdown — os campos se preenchem automaticamente. Como coordenador, crie um plano para cada turma. Os planos aparecem como abas na grade.</p>
+            <div class="mock">
+              <div class="mock-title">📄 Abas de planos — cada aba é uma turma</div>
+              <div class="mock-body">
+                <div class="mock-tabs">
+                  <span class="plano-tab active">
+                    <span class="tab-dot" style="background:#003E7E"></span> ADS · 3º Sem · 2026
+                    <span class="tab-count" style="background:#003E7E;color:#fff">8 aulas</span>
+                  </span>
+                  <span class="plano-tab">
+                    <span class="tab-dot" style="background:#C8102E"></span> Mecânica · 1º Sem
+                    <span class="tab-count">6 aulas</span>
+                  </span>
+                  <span class="btn-novo-plano">＋ Novo Plano</span>
+                </div>
+                <div class="mock-caption">Clique para alternar · Duplo clique para editar · × para excluir o plano</div>
+              </div>
+            </div>
+            <div class="guia-tip">💡 O plano herda a cor do curso selecionado. Docentes e salas são compartilhados — conflitos entre planos são detectados automaticamente.</div>
+          </div>
+        </article>
+
+        <!-- PASSO 6 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">6</span>
+            <div>
+              <div class="guia-step-title">Alocar Aulas na Grade</div>
+              <div class="guia-step-path">Clique em qualquer célula vazia · ou Botão: + Alocar Aula</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <p>Clique em qualquer célula da grade para abrir o modal de alocação. Selecione múltiplos horários via checkboxes, escolha o curso, docente e sala. Horários com conflito são bloqueados automaticamente.</p>
+            <div class="mock">
+              <div class="mock-title">📋 Seleção de múltiplos horários por checkboxes</div>
+              <div class="mock-body mock-split">
+                <div>
+                  <label class="hr-option checked"><input type="checkbox" checked disabled><span class="hr-label">1ª 19:10–20:00</span></label>
+                  <label class="hr-option checked"><input type="checkbox" checked disabled><span class="hr-label">2ª 20:10–21:00</span></label>
+                  <label class="hr-option"><input type="checkbox" disabled><span class="hr-label">3ª 21:10–22:00</span></label>
+                  <label class="hr-option ocupado"><input type="checkbox" disabled><span class="hr-label">4ª 22:10–23:00</span><span class="badge badge-red">Prof. ocupado</span></label>
+                </div>
+                <div class="mock-legend">
+                  <div><span class="on">✔ Marcado</span> — horário livre, será alocado</div>
+                  <div><span class="off">☐ Desmarcado</span> — disponível mas não selecionado</div>
+                  <div class="bad">🔴 Prof. ocupado / Sala ocupada — bloqueado</div>
+                </div>
+              </div>
+            </div>
+            <div class="guia-tip">💡 Ao trocar o docente ou a sala no formulário, os checkboxes atualizam automaticamente mostrando quais horários ficam bloqueados para aquela combinação.</div>
+          </div>
+        </article>
+
+        <!-- PASSO 7 -->
+        <article class="guia-step">
+          <div class="guia-step-head">
+            <span class="guia-step-num">7</span>
+            <div>
+              <div class="guia-step-title">Revisar, Resumir e Exportar</div>
+              <div class="guia-step-path">Botões: 📊 Resumo · Conflitos · ⬇ Exportar JSON</div>
+            </div>
+          </div>
+          <div class="guia-step-body">
+            <div class="guia-features">
+              <div class="guia-feature">
+                <div class="guia-feature-icon">📊</div>
+                <div class="guia-feature-title">Resumo</div>
+                <div class="guia-feature-text">Visão macro de todos os planos. Filtre por professor para ver sua grade semanal completa.</div>
+              </div>
+              <div class="guia-feature">
+                <div class="guia-feature-icon">⚠️</div>
+                <div class="guia-feature-title">Conflitos</div>
+                <div class="guia-feature-text">Lista todos os conflitos entre planos. O badge vermelho no menu indica o total ativo.</div>
+              </div>
+              <div class="guia-feature">
+                <div class="guia-feature-icon">💾</div>
+                <div class="guia-feature-title">Exportar / Importar</div>
+                <div class="guia-feature-text">Salve o planejamento completo em JSON. Importe para continuar em outra sessão ou computador.</div>
+              </div>
+            </div>
+            <div class="guia-done">
+              <span class="guia-done-icon">✅</span>
+              <div><strong>Pronto!</strong> Com todos os passos concluídos, sua grade estará sem conflitos e pronta. Use <strong>Resumo → 🖨 Imprimir</strong> para gerar um PDF com todas as grades ou <strong>⬇ Exportar JSON</strong> para salvar e compartilhar o planejamento.</div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ATALHOS -->
+        <div class="guia-shortcuts">
+          <div class="guia-shortcuts-title">⌨️ Atalhos e Dicas Rápidas</div>
+          <div class="guia-shortcuts-grid">
+            <div class="guia-shortcut"><span class="guia-shortcut-icon">🖱️</span><div><strong>Clique na célula da grade</strong><br>Abre o modal com o dia e horário já pré-selecionados.</div></div>
+            <div class="guia-shortcut"><span class="guia-shortcut-icon">✕</span><div><strong>Remover aula da grade</strong><br>Passe o mouse sobre a aula e clique no ✕ que aparece no canto.</div></div>
+            <div class="guia-shortcut"><span class="guia-shortcut-icon">🖱️🖱️</span><div><strong>Duplo clique na aba do plano</strong><br>Abre o modal de edição daquele plano.</div></div>
+            <div class="guia-shortcut"><span class="guia-shortcut-icon">💾</span><div><strong>Salvamento automático</strong><br>Tudo é salvo no navegador automaticamente. Não há botão "Salvar".</div></div>
+            <div class="guia-shortcut"><span class="guia-shortcut-icon">🔴</span><div><strong>Badge vermelho em Conflitos</strong><br>Indica quantos conflitos ativos existem entre todos os planos.</div></div>
+            <div class="guia-shortcut"><span class="guia-shortcut-icon">📊</span><div><strong>Resumo por professor</strong><br>No Resumo, selecione um docente para ver toda a sua grade consolidada de todos os planos.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ══════════════ MODAIS ══════════════ -->
+
+<!-- MODAL CURSO -->
+<div class="overlay" id="overlayModalCurso">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalCursoTitle">📚 Novo Curso</div>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cursoId">
+      <div class="field">
+        <label for="cursoNome">Nome do Curso *</label>
+        <input id="cursoNome" placeholder="Ex: Análise e Desenvolvimento de Sistemas">
+      </div>
+      <div class="form-row cols-3">
+        <div class="field">
+          <label for="cursoSemestre">Semestre</label>
+          <select id="cursoSemestre" data-options="semestres"></select>
+        </div>
+        <div class="field">
+          <label for="cursoAno">Ano</label>
+          <select id="cursoAno" data-options="anos"></select>
+        </div>
+        <div class="field">
+          <label for="cursoPeriodo">Horário</label>
+          <select id="cursoPeriodo" data-options="periodos"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cursoPeriodoLetivo">Período</label>
+        <select id="cursoPeriodoLetivo" data-options="periodosLetivos"></select>
+      </div>
+      <div class="field">
+        <label for="cursoAulasSemana">Aulas por semana</label>
+        <input type="number" id="cursoAulasSemana" min="1" max="10" value="2">
+      </div>
+      <div class="field">
+        <label>Cor de identificação</label>
+        <div class="color-row" id="colorRow"></div>
+      </div>
+      <div class="field">
+        <label for="cursoObs">Observações</label>
+        <textarea id="cursoObs" rows="2" placeholder="Notas adicionais…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarCurso">Salvar Curso</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DOCENTE -->
+<div class="overlay" id="overlayModalDocente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalDocenteTitle">👤 Novo Docente</div>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="docenteId">
+      <div class="field">
+        <label for="docenteNome">Nome Completo *</label>
+        <input id="docenteNome" placeholder="Ex: Prof. João da Silva">
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="docenteTitulo">Titulação</label>
+          <select id="docenteTitulo">
+            <option value="">Sem titulação</option>
+            <option value="Esp.">Especialista</option>
+            <option value="Me.">Mestre</option>
+            <option value="Dr.">Doutor</option>
+            <option value="Pós-Dr.">Pós-Doutor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="docenteRegime">Regime</label>
+          <select id="docenteRegime">
+            <option value="40h">40h (Integral)</option>
+            <option value="20h">20h (Parcial)</option>
+            <option value="Horista">Horista</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="docenteEmail">E-mail</label>
+        <input id="docenteEmail" placeholder="email@anchieta.br" type="email">
+      </div>
+      <div class="field">
+        <label for="docenteMaxAulas">Máx. aulas / semana</label>
+        <input type="number" id="docenteMaxAulas" min="1" max="60" value="20">
+      </div>
+      <div class="field">
+        <label for="disciplinaInput">Disciplinas que leciona</label>
+        <div class="chip-input-wrap" id="chipWrap">
+          <div class="chip-list" id="disciplinasChips"></div>
+          <div class="chip-input-row">
+            <input id="disciplinaInput" placeholder="Digite uma disciplina e pressione Enter…" autocomplete="off">
+            <button class="btn btn-primary btn-xs" type="button" id="btnAddDisciplina">+ Add</button>
+          </div>
+          <div class="chip-input-hint">⏎ Enter ou clique em "+ Add" para confirmar cada disciplina</div>
+          <div class="suggestions" id="disciplinaSuggestions"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarDocente">Salvar Docente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SALA -->
+<div class="overlay" id="overlayModalSala">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalSalaTitle">🏫 Nova Sala / Espaço</div>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="salaId">
+      <div class="form-row">
+        <div class="field">
+          <label for="salaNome">Nome / Código *</label>
+          <input id="salaNome" placeholder="Ex: Lab. Informática A">
+        </div>
+        <div class="field">
+          <label for="salaTipo">Tipo *</label>
+          <select id="salaTipo" data-options="tiposSala"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="salaCapacidade">Capacidade (alunos)</label>
+          <input type="number" id="salaCapacidade" min="1" value="30">
+        </div>
+        <div class="field">
+          <label for="salaBloco">Bloco / Localização</label>
+          <input id="salaBloco" placeholder="Ex: Bloco A – 2º andar">
+        </div>
+      </div>
+      <div class="field">
+        <label for="salaRecursos">Recursos Disponíveis</label>
+        <input id="salaRecursos" placeholder="Ex: Projetor, Ar-cond., 30 PCs">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarSala">Salvar Sala</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AULA -->
+<div class="overlay" id="overlayModalAula">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalAulaTitle">📋 Alocar Aula</div>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="aulaId">
+      <div class="field">
+        <label for="aulaDia">Dia</label>
+        <select id="aulaDia"></select>
+      </div>
+      <div class="field" id="qtdAulaField">
+        <label>Horários a alocar <span class="hr-count" id="horariosCheckCount"></span></label>
+        <div class="hr-list" id="horariosCheckList"></div>
+        <div class="hr-list-hint">✔ Selecione um ou mais horários para alocar a mesma aula</div>
+      </div>
+      <div class="field">
+        <label for="aulaCurso">Curso *</label>
+        <select id="aulaCurso"></select>
+      </div>
+      <div class="field">
+        <label for="aulaDocente">Docente *</label>
+        <select id="aulaDocente"></select>
+      </div>
+      <div class="field">
+        <label for="aulaSala">Sala *</label>
+        <select id="aulaSala"></select>
+      </div>
+      <div class="field">
+        <label for="aulaObs">Observação</label>
+        <input id="aulaObs" placeholder="Ex: Aula prática, Prova, Reposição…">
+      </div>
+      <div id="conflitosAvisoModal"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarAula">Salvar Aula(s)</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PLANO -->
+<div class="overlay" id="overlayModalPlano">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalPlanoTitle">📄 Novo Plano de Horário</div>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="planoId">
+      <div class="field">
+        <label for="planoCursoId">Curso *</label>
+        <select id="planoCursoId"></select>
+      </div>
+      <div class="plano-info" id="planoInfoCurso" hidden></div>
+      <div class="form-row">
+        <div class="field">
+          <label for="planoSemestre">Semestre</label>
+          <select id="planoSemestre" data-options="semestres"></select>
+        </div>
+        <div class="field">
+          <label for="planoAno">Ano</label>
+          <select id="planoAno" data-options="anos"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="planoTurma">Código da Turma</label>
+          <input id="planoTurma" class="input-upper" placeholder="Ex: ADS3N-2025, MEC2M-A…">
+        </div>
+        <div class="field">
+          <label for="planoPeriodo">Período</label>
+          <select id="planoPeriodo" data-options="periodos"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cor de identificação</label>
+        <div class="color-row" id="colorRowPlano"></div>
+      </div>
+      <div class="alert alert-info alert-sm">
+        ℹ️ Os planos compartilham o mesmo banco de <strong>docentes e salas</strong>. Conflitos entre planos são detectados automaticamente.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarPlano">Criar Plano</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCRIPTS (ordem importa) ══════════════ -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/turnos.js"></script>
+<script src="js/conflitos.js"></script>
+<script src="js/planos.js"></script>
+<script src="js/cursos.js"></script>
+<script src="js/docentes.js"></script>
+<script src="js/salas.js"></script>
+<script src="js/aulas.js"></script>
+<script src="js/grade.js"></script>
+<script src="js/resumo.js"></script>
+<script src="js/dados.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

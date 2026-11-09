@@ -229,11 +229,10 @@ function aplicarPapel() {
   setStatusSync(gestao ? 'salvo' : 'leitura');
 
   if (gestao) assinarUsuarios();
-  else {
-    pararUsuarios();
-    if (PAGINAS_SO_GESTAO.some((p) => $('page-' + p).classList.contains('active'))) showPage('horario');
-  }
+  else pararUsuarios();
   renderAulasEditor();
+  // Mudou o nível com o app aberto: reabre a tela do endereço (Professor sai das abas da Gestão)
+  aplicarRota();
 }
 
 function bindAuth() {

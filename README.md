@@ -55,6 +55,16 @@ O site precisa ser aberto por **http(s)** (não funciona clicando duas vezes no 
 - **Publicado:** GitHub Pages (veja abaixo) — é o endereço que os professores vão usar.
 - **No seu computador:** VS Code → extensão **Live Server** → botão *Go Live*.
 
+Cada tela tem o seu **endereço**: recarregar a página (F5), usar Voltar/Avançar do navegador ou
+compartilhar o link abre a mesma tela (depois do login).
+
+| Endereço | Tela |
+|---|---|
+| `#/grade/<id-do-plano>` | Grade de um plano |
+| `#/resumo` · `#/resumo/<id-do-docente>` | Resumo de todos os planos · de um professor |
+| `#/cursos` · `#/docentes` · `#/conflitos` · `#/guia` | Abas correspondentes |
+| `#/salas` · `#/usuarios` | Somente Gestão (Professor é levado para a grade) |
+
 Ordem recomendada: **Salas → Docentes → Cursos → Turno → Novo Plano → Alocar Aulas → Revisar**.
 O passo a passo completo está na aba **✦ Guia** dentro do sistema.
 
@@ -91,6 +101,7 @@ horario-academico/
     ├── grade.js            # Grade semanal, estatísticas e progresso
     ├── resumo.js           # Visão Resumo (macro e por professor)
     ├── dados.js            # Exportar / importar / limpar
+    ├── rotas.js            # Endereço de cada tela (#/grade, #/salas...), F5 e Voltar
     └── main.js             # Navegação, eventos e inicialização
 ```
 

@@ -16,6 +16,7 @@ function toggleGeral() {
     populateResumoDocente();
     renderViewGeral();
   }
+  registrarRota();
 }
 
 function abrirPlanoDoResumo(id) {

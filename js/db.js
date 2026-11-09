@@ -84,6 +84,7 @@ function assinarDados() {
 
     if (primeiraCarga) {
       mostrarTela('app');
+      aplicarRota(); // abre a tela indicada no endereço (ex.: após F5)
       if (!snap.exists) oferecerMigracaoLocal();
     }
   }, (e) => {

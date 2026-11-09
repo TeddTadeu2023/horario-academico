@@ -94,6 +94,7 @@ function salvarPlano() {
   save();
   closeModal('overlayModalPlano');
   renderPlanosTabs(); renderGrade();
+  registrarRota();
 }
 
 function excluirPlano(id) {
@@ -105,6 +106,7 @@ function excluirPlano(id) {
   if (state.planoAtivoId === id) state.planoAtivoId = state.planos[0].id;
   verificarConflitos(); save();
   renderPlanosTabs(); renderGrade();
+  corrigirRota();
   toast('Plano excluído.', 'warn');
 }
 
@@ -112,6 +114,7 @@ function excluirPlano(id) {
 function selecionarPlano(id) {
   state.planoAtivoId = id;
   renderPlanosTabs(); renderGrade();
+  registrarRota();
 }
 
 function renderPlanosTabs() {

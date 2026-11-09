@@ -29,12 +29,13 @@ function renderTudo() {
   renderConflitos();
   if (modoGeral) { populateResumoDocente(); renderViewGeral(); }
   if (podeEditar() && $('page-usuarios').classList.contains('active')) renderUsuarios();
+  corrigirRota();
 }
 
 function bindEventos() {
   // Navegação
   document.querySelectorAll('.nav-btn[data-page]').forEach((b) =>
-    b.addEventListener('click', () => showPage(b.dataset.page)));
+    b.addEventListener('click', () => { showPage(b.dataset.page); registrarRota(); }));
 
   // Sidebar
   $('cursoAtivo').addEventListener('change', renderGrade);
@@ -53,7 +54,7 @@ function bindEventos() {
   $('btnNovoPlano').addEventListener('click', () => openModalNovoPlano());
   $('btnAlocarAula').addEventListener('click', () => openModalAula(null, null));
   $('btnGeral').addEventListener('click', toggleGeral);
-  $('resumoDocente').addEventListener('change', renderViewGeral);
+  $('resumoDocente').addEventListener('change', () => { renderViewGeral(); registrarRota(); });
   $('btnImprimir').addEventListener('click', () => window.print());
 
   // Cadastros
@@ -85,6 +86,7 @@ function init() {
   preencherSelects();
   bindEventos();
   bindAuth();
+  bindRotas();
   buildHorariosFromEditor();
 
   try {
